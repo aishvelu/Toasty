@@ -1,4 +1,4 @@
-<<<<<<< HEAD
+
 package com.example.mealapp.ui.theme
 
 import androidx.compose.foundation.layout.RowScope
@@ -73,7 +73,4 @@ fun RowScope.AddItem(
         }
     )
 }
-=======
-package com.example.mealapp
 
->>>>>>> e339ed1ae685f4fa61954b9d235580b1ccd57caa

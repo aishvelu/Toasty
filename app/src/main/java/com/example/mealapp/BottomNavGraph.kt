@@ -1,6 +1,5 @@
 package com.example.mealapp
 
-<<<<<<< HEAD
 import androidx.compose.runtime.Composable
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
@@ -26,5 +25,4 @@ fun BottomNavGraph(navController: NavHostController) {
         }
     }
 }
-=======
->>>>>>> e339ed1ae685f4fa61954b9d235580b1ccd57caa
+

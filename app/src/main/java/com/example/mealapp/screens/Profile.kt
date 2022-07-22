@@ -13,27 +13,15 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 
 @Composable
-<<<<<<< HEAD
 fun ProfileScreen() {
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(Color.Blue),
+            .background(Color.Magenta),
         contentAlignment = Alignment.Center
     ) {
         Text(
             text = "PROFILE",
-=======
-fun HomeScreen() {
-    Box(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(Color.Green),
-        contentAlignment = Alignment.Center
-    ) {
-        Text(
-            text = "HOME",
->>>>>>> e339ed1ae685f4fa61954b9d235580b1ccd57caa
             fontSize = MaterialTheme.typography.h3.fontSize,
             fontWeight = FontWeight.Bold,
             color = Color.White
@@ -43,11 +31,6 @@ fun HomeScreen() {
 
 @Composable
 @Preview
-<<<<<<< HEAD
 fun ProfileScreenPreview() {
     ProfileScreen()
-=======
-fun HomeScreenPreview() {
-    HomeScreen()
->>>>>>> e339ed1ae685f4fa61954b9d235580b1ccd57caa
 }
