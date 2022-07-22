@@ -1,5 +1,6 @@
 package com.example.mealapp.screens
 
+<<<<<<< HEAD
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
@@ -102,3 +103,5 @@ fun IngredientDropDownMenu() {
 fun CreateScreenPreview() {
     CreateScreen()
 }
+=======
+>>>>>>> e339ed1ae685f4fa61954b9d235580b1ccd57caa

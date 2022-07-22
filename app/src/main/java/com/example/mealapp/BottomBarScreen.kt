@@ -1,5 +1,6 @@
 package com.example.mealapp
 
+<<<<<<< HEAD
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.Person
@@ -31,3 +32,6 @@ sealed class BottomBarScreen(
     )
 }
 
+=======
+sealed class BottomBarScreen
+>>>>>>> e339ed1ae685f4fa61954b9d235580b1ccd57caa
