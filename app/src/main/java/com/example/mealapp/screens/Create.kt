@@ -51,8 +51,12 @@ private fun Ingredients(count: List<String> = List(3) { "$it" }) {
 fun IngredientDropDownMenu() {
     var expanded by remember { mutableStateOf(false) }
     val suggestions = listOf("Meats", "Dairy", "Fruits", "Vegetables")
+    val meatsList = Data.meatData["Meats"]
+    val dairyList = Data.dairyData["Dairy"]
+    val vegetableList = Data.vegetableData["Vegetables"]
+    val fruitList = Data.fruitData["Fruits"]
     var selectedText by remember { mutableStateOf("") }
-
+    var dropDown by remember {mutableStateOf(null)}
     var textfieldSize by remember { mutableStateOf(Size.Zero)}
 
     val icon = if (expanded)
