@@ -1,22 +1,25 @@
 package com.example.mealapp.screens
 
 import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.wrapContentSize
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.*
 import androidx.compose.material.*
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.KeyboardArrowDown
+import androidx.compose.material.icons.filled.KeyboardArrowUp
 import androidx.compose.material.icons.filled.MoreVert
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.MutableState
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.onGloballyPositioned
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.toSize
 
 @Composable
 fun HomeScreen() {
@@ -34,169 +37,95 @@ fun HomeScreen() {
         )
     }
 }
+
 @Composable
-fun MainMenu(
-    menuSelection: MutableState<MenuSelection>,
-    expandedMain: MutableState<Boolean>,
-    expandedNested: MutableState<Boolean>
-) {
+fun NestedMenu(expandedNested:MutableState<Boolean>, selectedText:MutableState<String>,
+               textfieldSize:MutableState<Size>, listData: List<ProductModel> ) {
     DropdownMenu(
-        expanded = expandedMain.value,
-        onDismissRequest = { expandedMain.value = false },
+        expanded = expandedNested.value,
+        onDismissRequest = { expandedNested.value = false },
+        modifier = Modifier
+            .width(with(LocalDensity.current){textfieldSize.value.width.toDp()})
     ) {
-        DropdownMenuItem(
-            onClick = {
-                expandedMain.value = false // hide main menu
-                expandedNested.value = true // show nested menu
-                menuSelection.value = MenuSelection.NESTED
-            }
-        ) {
-            Text("Nested Options \u25B6")
-        }
-
-
-        Divider()
-
-        DropdownMenuItem(
-            onClick = {
-                // close main menu
-                expandedMain.value = false
-                menuSelection.value = MenuSelection.Meats
-            }
-        ) {
-            Text("Meats")
-        }
-
-        Divider()
-
-        DropdownMenuItem(
-            onClick = {
-                // close main menu
-                expandedMain.value = false
-                menuSelection.value = MenuSelection.Dairy
-            }
-        ) {
-            Text("Dairy")
-        }
-
-        Divider()
-
-        DropdownMenuItem(
-            onClick = {
-                // close main menu
-                expandedMain.value = false
-                menuSelection.value = MenuSelection.Vegetbles
-            }
-        ) {
-            Text("Vegetables")
-        }
-
-        Divider()
-
-        DropdownMenuItem(
-            onClick = {
-                // close main menu
-                expandedMain.value = false
-                menuSelection.value = MenuSelection.Fruits
-            }
-        ) {
-            Text("Fruits")
-        }
-    }
-}
-    @Composable
-    fun NestedMenu(
-        expandedNested: MutableState<Boolean>,
-        nestedMenuSelection: MutableState<NestedMenuSelection>
-    ) {
-        DropdownMenu(
-            expanded = expandedNested.value,
-            onDismissRequest = { expandedNested.value = false }
-        ) {
-            DropdownMenuItem(
-                onClick = {
-                    // close nested menu
-                    expandedNested.value = false
-                    nestedMenuSelection.value = NestedMenuSelection.FIRST
-                }
-            ) {
-                Text("First")
-            }
-            DropdownMenuItem(
-                onClick = {
-                    // close nested menu
-                    expandedNested.value = false
-                    nestedMenuSelection.value = NestedMenuSelection.SECOND
-                }
-            ) {
-                Text("Second")
-            }
-        }
-
-}
-@Composable
-fun TopAppBarDropdownMenu(
-    menuSelection: MutableState<MenuSelection>,
-    nestedMenuSelection: MutableState<NestedMenuSelection>
-) {
-
-    val expandedMain = remember { mutableStateOf(false) }
-    val expandedNested = remember { mutableStateOf(false) }
-
-    // Three Dot icon
-    Box(
-        Modifier
-            .wrapContentSize(Alignment.TopEnd)
-    ) {
-        IconButton(
-            onClick = {
-                // Expand the main menu on three dots icon click
-                // and hide the nested menu.
-                expandedMain.value = true
+        listData.forEach { label ->
+            DropdownMenuItem(onClick = {
+                selectedText.value = label.title
                 expandedNested.value = false
+            }) {
+                Text(text = label.title)
             }
-        ) {
-            Icon(
-                Icons.Filled.MoreVert,
-                contentDescription = "More Menu"
-            )
         }
     }
-
-    MainMenu(
-        menuSelection = menuSelection,
-        expandedMain = expandedMain,
-        expandedNested = expandedNested
-    )
-    NestedMenu(
-        expandedNested = expandedNested,
-        nestedMenuSelection = nestedMenuSelection
-    )
-
 }
-
 @Composable
-fun MainScreen(
-    /* some params */
-) {
+fun TopAppBarDropdownMenu() {
+    var expandedMain = remember { mutableStateOf(false) }
+    var expandedNested = remember { mutableStateOf(false) }
+    val suggestions = listOf("Meats", "Dairy", "Fruits", "Vegetables")
+    val meatsList = Data.meatData["Meats"]
+    val dairyList = Data.dairyData["Dairy"]
+    val vegetableList = Data.vegetableData["Vegetables"]
+    val fruitList = Data.fruitData["Fruits"]
+    var selectedText = remember { mutableStateOf("") }
+    var textfieldSize = remember { mutableStateOf(Size.Zero) }
 
-    val menuSelection = remember { mutableStateOf(MenuSelection.NONE) }
-    val nestedMenuSelection = remember { mutableStateOf(NestedMenuSelection.DEFAULT) }
+    val iconMain = if (expandedMain.value)
+        Icons.Filled.KeyboardArrowUp
+    else
+        Icons.Filled.KeyboardArrowDown
 
-    Scaffold(
-        topBar = {
-            TopAppBar(
-                title = { Text(text = "Add Ingredients") },
-                actions = {
-                    TopAppBarDropdownMenu(
-                        menuSelection = menuSelection,
-                        nestedMenuSelection= nestedMenuSelection
-                    )
-                }
-            )
+    Column(Modifier.padding(20.dp)) {
+        OutlinedTextField(
+            value = selectedText,
+            onValueChange = { selectedText = selectedText },
+            modifier = Modifier
+                .fillMaxWidth()
+                .onGloballyPositioned { coordinates ->
+                    //This value is used to assign to the DropDown the same width
+                    textfieldSize = coordinates.size.toSize()
+                },
+            label = { Text("Label") },
+            trailingIcon = {
+                Icon(iconMain, "contentDescription",
+                    Modifier.clickable {
+                        // Expand the main menu on icon click
+                        // and hide the nested menu.
+                        expandedMain.value = true
+                        expandedNested.value = false
+                    })
+            }
+        )
+        DropdownMenu(
+            expanded = expandedMain.value,
+            onDismissRequest = { expandedMain.value = false },
+            modifier = Modifier
+                .width(with(LocalDensity.current){textfieldSize.value.width.toDp()})
+        ) {
+            suggestions.forEach { label ->
+                DropdownMenuItem(onClick = {
+                    expandedMain.value = false
+                    expandedNested.value = true
+                },
+                content = {
+                    when (label) {
+                        "Meats" -> meatsList
+                        "Dairy" -> dairyList
+                        "Vegetables" -> vegetableList
+                        else -> fruitList
+                    }?.let {
+                        NestedMenu(
+                            expandedNested = expandedNested,
+                            selectedText = selectedText,
+                            textfieldSize = textfieldSize,
+                            listData = it
+                        )
+                    }
+                })
+            }
         }
-    ){}
+    }
 }
+
 @Composable
 @Preview
 fun HomeScreenPreview() {

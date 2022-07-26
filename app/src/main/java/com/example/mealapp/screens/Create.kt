@@ -56,7 +56,6 @@ fun IngredientDropDownMenu() {
     val vegetableList = Data.vegetableData["Vegetables"]
     val fruitList = Data.fruitData["Fruits"]
     var selectedText by remember { mutableStateOf("") }
-    var dropDown by remember {mutableStateOf(null)}
     var textfieldSize by remember { mutableStateOf(Size.Zero)}
 
     val icon = if (expanded)
