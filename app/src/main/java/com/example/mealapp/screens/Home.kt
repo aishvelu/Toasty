@@ -29,30 +29,54 @@ fun HomeScreen() {
             .background(Color.Magenta),
         contentAlignment = Alignment.Center
     ) {
-        Text(
-            text = "HOME",
-            fontSize = MaterialTheme.typography.h3.fontSize,
-            fontWeight = FontWeight.Bold,
-            color = Color.White
-        )
+//        Text(
+//            text = "HOME",
+//            fontSize = MaterialTheme.typography.h3.fontSize,
+//            fontWeight = FontWeight.Bold,
+//            color = Color.White
+//        )
+        TopAppBarDropdownMenu()
     }
 }
 
 @Composable
 fun NestedMenu(expandedNested:MutableState<Boolean>, selectedText:MutableState<String>,
-               textfieldSize:MutableState<Size>, listData: List<ProductModel> ) {
-    DropdownMenu(
-        expanded = expandedNested.value,
-        onDismissRequest = { expandedNested.value = false },
-        modifier = Modifier
-            .width(with(LocalDensity.current){textfieldSize.value.width.toDp()})
-    ) {
-        listData.forEach { label ->
-            DropdownMenuItem(onClick = {
-                selectedText.value = label.title
-                expandedNested.value = false
-            }) {
-                Text(text = label.title)
+               textfieldSize:MutableState<Size>, listData: List<ProductModel>, label: String) {
+    val expandedInner = remember { mutableStateOf(false) }
+    val icon = if (expandedInner.value)
+        Icons.Filled.KeyboardArrowUp
+    else
+        Icons.Filled.KeyboardArrowDown
+
+    Column(Modifier.padding(20.dp)) {
+        OutlinedTextField(
+            value = label,
+            onValueChange = { },
+            modifier = Modifier
+                .fillMaxWidth()
+                .onGloballyPositioned { coordinates ->
+                    //This value is used to assign to the DropDown the same width
+                    textfieldSize.value = coordinates.size.toSize()
+                },
+            label = { Text("Label") },
+            trailingIcon = {
+                Icon(icon, "contentDescription",
+                    Modifier.clickable { expandedInner.value = !expandedInner.value })
+            }
+        )
+        DropdownMenu(
+            expanded = expandedInner.value,
+            onDismissRequest = { expandedInner.value = false },
+            modifier = Modifier
+                .width(with(LocalDensity.current) { textfieldSize.value.width.toDp() })
+        ) {
+            listData.forEach { label ->
+                DropdownMenuItem(onClick = {
+                    selectedText.value = label.title
+                    expandedInner.value = false
+                }) {
+                    Text(text = label.title)
+                }
             }
         }
     }
@@ -76,13 +100,13 @@ fun TopAppBarDropdownMenu() {
 
     Column(Modifier.padding(20.dp)) {
         OutlinedTextField(
-            value = selectedText,
-            onValueChange = { selectedText = selectedText },
+            value = selectedText.value,
+            onValueChange = { selectedText.value = it },
             modifier = Modifier
                 .fillMaxWidth()
                 .onGloballyPositioned { coordinates ->
                     //This value is used to assign to the DropDown the same width
-                    textfieldSize = coordinates.size.toSize()
+                    textfieldSize.value = coordinates.size.toSize()
                 },
             label = { Text("Label") },
             trailingIcon = {
@@ -117,10 +141,12 @@ fun TopAppBarDropdownMenu() {
                             expandedNested = expandedNested,
                             selectedText = selectedText,
                             textfieldSize = textfieldSize,
-                            listData = it
+                            listData = it,
+                            label = label
                         )
                     }
                 })
+                Text(text = label)
             }
         }
     }
