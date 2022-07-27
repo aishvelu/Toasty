@@ -42,8 +42,8 @@ fun HomeScreen() {
 @Composable
 fun NestedMenu(expandedNested:MutableState<Boolean>, selectedText:MutableState<String>,
                textfieldSize:MutableState<Size>, listData: List<ProductModel>, label: String) {
-    val expandedInner = remember { mutableStateOf(false) }
-    val icon = if (expandedInner.value)
+
+    val icon = if (expandedNested.value)
         Icons.Filled.KeyboardArrowUp
     else
         Icons.Filled.KeyboardArrowDown
@@ -61,19 +61,19 @@ fun NestedMenu(expandedNested:MutableState<Boolean>, selectedText:MutableState<S
             label = { Text("Label") },
             trailingIcon = {
                 Icon(icon, "contentDescription",
-                    Modifier.clickable { expandedInner.value = !expandedInner.value })
+                    Modifier.clickable { expandedNested.value = !expandedNested.value })
             }
         )
         DropdownMenu(
-            expanded = expandedInner.value,
-            onDismissRequest = { expandedInner.value = false },
+            expanded = expandedNested.value,
+            onDismissRequest = { expandedNested.value = false },
             modifier = Modifier
                 .width(with(LocalDensity.current) { textfieldSize.value.width.toDp() })
         ) {
             listData.forEach { label ->
                 DropdownMenuItem(onClick = {
                     selectedText.value = label.title
-                    expandedInner.value = false
+                    expandedNested.value = false
                 }) {
                     Text(text = label.title)
                 }
@@ -84,7 +84,10 @@ fun NestedMenu(expandedNested:MutableState<Boolean>, selectedText:MutableState<S
 @Composable
 fun TopAppBarDropdownMenu() {
     var expandedMain = remember { mutableStateOf(false) }
-    var expandedNested = remember { mutableStateOf(false) }
+    var expandedNestedMeats = remember { mutableStateOf(false) }
+    var expandedNestedDairy = remember { mutableStateOf(false) }
+    var expandedNestedFruits = remember { mutableStateOf(false) }
+    var expandedNestedVegetables = remember { mutableStateOf(false) }
     val suggestions = listOf("Meats", "Dairy", "Fruits", "Vegetables")
     val meatsList = Data.meatData["Meats"]
     val dairyList = Data.dairyData["Dairy"]
@@ -115,7 +118,10 @@ fun TopAppBarDropdownMenu() {
                         // Expand the main menu on icon click
                         // and hide the nested menu.
                         expandedMain.value = true
-                        expandedNested.value = false
+                        expandedNestedMeats.value = false
+                        expandedNestedDairy.value = false
+                        expandedNestedFruits.value = false
+                        expandedNestedVegetables.value = false
                     })
             }
         )
@@ -128,22 +134,47 @@ fun TopAppBarDropdownMenu() {
             suggestions.forEach { label ->
                 DropdownMenuItem(onClick = {
                     expandedMain.value = false
-                    expandedNested.value = true
+                    //expandedNested.value = true
                 },
                 content = {
                     when (label) {
-                        "Meats" -> meatsList
-                        "Dairy" -> dairyList
-                        "Vegetables" -> vegetableList
-                        else -> fruitList
-                    }?.let {
-                        NestedMenu(
-                            expandedNested = expandedNested,
-                            selectedText = selectedText,
-                            textfieldSize = textfieldSize,
-                            listData = it,
-                            label = label
-                        )
+                        "Meats" -> meatsList?.let {
+                            NestedMenu(
+                                expandedNested = expandedNestedMeats,
+                                selectedText = selectedText,
+                                textfieldSize = textfieldSize,
+                                listData = it,
+                                label = label
+                            )
+                        }
+                        "Dairy" -> dairyList?.let {
+                            NestedMenu(
+                                expandedNested = expandedNestedDairy,
+                                selectedText = selectedText,
+                                textfieldSize = textfieldSize,
+                                listData = it,
+                                label = label
+                            )
+                        }
+                        "Vegetables" -> vegetableList?.let {
+                            NestedMenu(
+                                expandedNested = expandedNestedVegetables,
+                                selectedText = selectedText,
+                                textfieldSize = textfieldSize,
+                                listData = it,
+                                label = label
+                            )
+                        }
+                        else -> fruitList?.let {
+                            NestedMenu(
+                                expandedNested = expandedNestedMeats,
+                                selectedText = selectedText,
+                                textfieldSize = textfieldSize,
+                                listData = it,
+                                label = label
+                            )
+                        }
+
                     }
                 })
                 Text(text = label)
