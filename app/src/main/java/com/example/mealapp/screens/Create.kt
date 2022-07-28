@@ -140,6 +140,7 @@ fun TopAppBarDropdownMenu() {
                 ){
                     Row(horizontalArrangement = Arrangement.Start) {
                         Text(text = label)
+                        Spacer(modifier = Modifier.weight(1f))
                         Icon(imageVector = iconNested,
                             //modifier = Modifier.weight(6f, true),
                             contentDescription = null)

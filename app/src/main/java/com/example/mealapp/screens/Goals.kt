@@ -21,7 +21,7 @@ fun GoalsScreen() {
         contentAlignment = Alignment.Center
     ) {
         Text(
-            text = "SAVED",
+            text = "GOALS",
             fontSize = MaterialTheme.typography.h3.fontSize,
             fontWeight = FontWeight.Bold,
             color = Color.White
