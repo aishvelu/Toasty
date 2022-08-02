@@ -1,5 +1,6 @@
 package com.example.mealapp.screens
 
+import android.util.Log
 import android.util.Patterns
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
@@ -26,15 +27,18 @@ import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.auth.ktx.auth
+import com.google.firebase.ktx.Firebase
 
 
 @Composable
-fun ProfileScreen() {
-    LoginScreen()
+fun ProfileScreen(auth: FirebaseAuth) {
+    LoginScreen(auth)
 }
 
 @Composable
-fun LoginScreen() {
+fun LoginScreen(auth: FirebaseAuth) {
     val focusManager = LocalFocusManager.current
     var email by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
@@ -49,7 +53,7 @@ fun LoginScreen() {
         verticalArrangement = Arrangement.Top,
     ){
         Text(
-            text = "Welcome back....",
+            text = "Welcome to Create a Meal",
             fontFamily = FontFamily.Companion.SansSerif,
             fontWeight = FontWeight.Bold,
             fontStyle = FontStyle.Italic,
@@ -116,7 +120,17 @@ fun LoginScreen() {
                     visualTransformation = if (isPasswordVisible) VisualTransformation.None
                     else PasswordVisualTransformation()
                 )
-                Button(onClick = {},
+                Button(onClick = {
+                                 auth.signInWithEmailAndPassword(email,password)
+                                     .addOnCompleteListener{
+                                         if (it.isSuccessful){
+                                             logInSuccess(email)
+                                         }
+                                         else{
+                                             logInFail()
+                                         }
+                                     }
+                },
                     enabled = isEmailValid && isPasswordValid,
                     modifier = Modifier.fillMaxWidth(),
                     colors = ButtonDefaults.buttonColors(backgroundColor = Color.Red)
@@ -150,10 +164,49 @@ fun LoginScreen() {
         }
     }
 }
+@Composable
+fun logInFail() {
+    Column(
+        modifier = Modifier
+            .background(color = Color.LightGray)
+            .fillMaxSize(),
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.Top,
+    ) {
+        Text(
+            text = "Invalid email or password.",
+            fontFamily = FontFamily.Companion.SansSerif,
+            fontWeight = FontWeight.Bold,
+            fontStyle = FontStyle.Italic,
+            fontSize = 32.sp,
+            modifier = Modifier.padding(top = 16.dp)
+        )
+    }
+}
+
+@Composable
+fun logInSuccess(email: String){
+    Column(
+        modifier = Modifier
+            .background(color = Color.LightGray)
+            .fillMaxSize(),
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.Top,
+    ) {
+        Text(
+            text = "Welcome back $email!",
+            fontFamily = FontFamily.Companion.SansSerif,
+            fontWeight = FontWeight.Bold,
+            fontStyle = FontStyle.Italic,
+            fontSize = 32.sp,
+            modifier = Modifier.padding(top = 16.dp)
+        )
+    }
+}
 
 @Composable
 @Preview
 fun ProfileScreenPreview() {
-    ProfileScreen()
+    ProfileScreen(Firebase.auth)
 }
 
