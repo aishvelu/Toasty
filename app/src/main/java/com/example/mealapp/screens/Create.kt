@@ -24,6 +24,28 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.unit.toSize
+import com.example.mealapp.R
+import com.squareup.moshi.JsonClass
+import com.squareup.moshi.Moshi
+import com.squareup.picasso.Picasso
+import okhttp3.OkHttpClient
+import okhttp3.Request
+import okio.IOException
+
+private val client = OkHttpClient()
+private val moshi = Moshi.Builder().build()
+private val gistJsonAdapter = moshi.adapter(Gist::class.java)
+private val url = "https://tasty.p.rapidapi.com/recipes/list?from=0&size=10&tags=under_30_minutes&q="
+
+
+
+@JsonClass(generateAdapter = true)
+data class Gist(var files: Map<String, GistFile>?)
+
+@JsonClass(generateAdapter = true)
+data class GistFile(var content: String?)
+
+
 
 @Composable
 fun CreateScreen() {
@@ -202,6 +224,35 @@ fun TopAppBarDropdownMenu() {
         }
     }
 }
+
+@Composable
+fun RecipeImage(ingredient_1: String, ingredient_2: String = "", ingredient_3: String = "") {
+    var urlmod = url + ingredient_1
+    if(!ingredient_2.equals("")){
+        urlmod += ingredient_2
+    }
+    if(!ingredient_3.equals("")){
+        urlmod += ingredient_3
+    }
+
+    val request = Request.Builder()
+        .url(urlmod)
+        .get()
+        .addHeader("X-RapidAPI-Key", "1fce4d8ce8mshb43ee73e23131ecp128481jsn7574c01064bf")
+        .addHeader("X-RapidAPI-Host", "tasty.p.rapidapi.com")
+        .build()
+    client.newCall(request).execute().use { response ->
+        if (!response.isSuccessful) throw IOException("Unexpected code $response")
+
+        val gist = gistJsonAdapter.fromJson(response.body!!.source())
+
+        for ((key, value) in gist!!.files!!) {
+            println(key)
+            println(value.content)
+        }
+    }
+}
+
 @Composable
 @Preview
 fun CreateScreenPreview() {
