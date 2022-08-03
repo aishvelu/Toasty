@@ -14,7 +14,7 @@ fun BottomNavGraph(navController: NavHostController, auth: FirebaseAuth) {
         startDestination = BottomBarScreen.Profile.route
     ) {
         composable(route = BottomBarScreen.Profile.route) {
-            ProfileScreen(auth)
+            ProfileScreen(auth, navController)
         }
         composable(route = BottomBarScreen.Goals.route) {
             GoalsScreen()
