@@ -1,6 +1,5 @@
 package com.example.mealapp.screens
 
-import android.util.Log
 import android.util.Patterns
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
@@ -11,6 +10,8 @@ import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Clear
+import androidx.compose.material.icons.filled.Visibility
+import androidx.compose.material.icons.filled.VisibilityOff
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -27,24 +28,28 @@ import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.navigation.NavHostController
+import com.example.mealapp.BottomBarScreen
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.ktx.auth
 import com.google.firebase.ktx.Firebase
 
 
 @Composable
-fun ProfileScreen(auth: FirebaseAuth) {
-    LoginScreen(auth)
+fun ProfileScreen(auth: FirebaseAuth, navController: NavHostController) {
+    LoginScreen(auth, navController)
 }
 
 @Composable
-fun LoginScreen(auth: FirebaseAuth) {
+fun LoginScreen(auth: FirebaseAuth, navController: NavHostController, ) {
     val focusManager = LocalFocusManager.current
     var email by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
     val isEmailValid by derivedStateOf{ Patterns.EMAIL_ADDRESS.matcher(email).matches()}
     val isPasswordValid by derivedStateOf { password.length > 7 }
     var isPasswordVisible by remember { mutableStateOf(false)}
+    var isLoginSuccessful by remember { mutableStateOf(false)}
+    var isLoginFail by remember { mutableStateOf(false)}
     Column(
         modifier = Modifier
             .background(color = Color.LightGray)
@@ -111,12 +116,13 @@ fun LoginScreen(auth: FirebaseAuth) {
                         onDone = {focusManager.clearFocus()}
                     ),
                     isError = !isPasswordValid,
-//                    trailingIcon = {
-//                            IconButton(onClick = {isPasswordVisible = !isPasswordValid}){
-//                                Icon(imageVector = if (isPasswordVisible) Icons.Default.Visibility else Icons.Default.VisibilityOff,
-//                                    contentDescription = "Toggle password visibility")
-//                            }
-//                    }
+                    trailingIcon = {
+                            IconButton(onClick = {isPasswordVisible = !isPasswordValid}){
+                                Icon(imageVector = if (isPasswordVisible) Icons.Default.Visibility
+                                else Icons.Default.VisibilityOff,
+                                    contentDescription = "Toggle password visibility")
+                            }
+                    },
                     visualTransformation = if (isPasswordVisible) VisualTransformation.None
                     else PasswordVisualTransformation()
                 )
@@ -124,10 +130,13 @@ fun LoginScreen(auth: FirebaseAuth) {
                                  auth.signInWithEmailAndPassword(email,password)
                                      .addOnCompleteListener{
                                          if (it.isSuccessful){
-                                             logInSuccess(email)
+                                             navController.navigate(BottomBarScreen.Goals.route)
+                                             isLoginSuccessful = true
+                                             isLoginFail = false
                                          }
                                          else{
-                                             logInFail()
+                                             isLoginFail = true
+                                             isLoginSuccessful = false
                                          }
                                      }
                 },
@@ -161,6 +170,15 @@ fun LoginScreen(auth: FirebaseAuth) {
                     fontSize = 16.sp,
                 )
             }
+        }
+        if (isLoginSuccessful) {
+            logInSuccess(email)
+        }
+        else if (isLoginFail){
+            logInFail()
+        }
+        else{
+
         }
     }
 }
@@ -204,9 +222,5 @@ fun logInSuccess(email: String){
     }
 }
 
-@Composable
-@Preview
-fun ProfileScreenPreview() {
-    ProfileScreen(Firebase.auth)
-}
+
 
