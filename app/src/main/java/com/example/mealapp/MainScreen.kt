@@ -13,14 +13,15 @@ import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import com.example.mealapp.BottomBarScreen
 import com.example.mealapp.BottomNavGraph
+import com.google.firebase.auth.FirebaseAuth
 
 @Composable
-fun MainScreen() {
+fun MainScreen(auth: FirebaseAuth) {
     val navController = rememberNavController()
     Scaffold(
         bottomBar = { BottomBar(navController = navController) }
     ) {
-        BottomNavGraph(navController = navController)
+        BottomNavGraph(navController = navController, auth = auth)
     }
 }
 
