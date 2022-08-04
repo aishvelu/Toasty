@@ -48,7 +48,7 @@ fun LoginScreen(auth: FirebaseAuth, navController: NavHostController, ) {
     val isEmailValid by derivedStateOf{ Patterns.EMAIL_ADDRESS.matcher(email).matches()}
     val isPasswordValid by derivedStateOf { password.length > 7 }
     var isPasswordVisible by remember { mutableStateOf(false)}
-    var isLoginSuccessful by remember { mutableStateOf(false)}
+    //var isLoginSuccessful by remember { mutableStateOf(false)}
     var isLoginFail by remember { mutableStateOf(false)}
     Column(
         modifier = Modifier
@@ -58,14 +58,14 @@ fun LoginScreen(auth: FirebaseAuth, navController: NavHostController, ) {
         verticalArrangement = Arrangement.Top,
     ){
         Text(
-            text = "Welcome to Create a Meal",
+            text = "Welcome to RecipePad!",
             fontFamily = FontFamily.Companion.SansSerif,
             fontWeight = FontWeight.Bold,
             fontStyle = FontStyle.Italic,
             fontSize = 32.sp,
             modifier = Modifier.padding(top = 16.dp)
         )
-
+        Spacer (modifier = Modifier.padding(24.dp))
         Card(
             modifier = Modifier
                 .fillMaxWidth()
@@ -131,12 +131,12 @@ fun LoginScreen(auth: FirebaseAuth, navController: NavHostController, ) {
                                      .addOnCompleteListener{
                                          if (it.isSuccessful){
                                              navController.navigate(BottomBarScreen.Goals.route)
-                                             isLoginSuccessful = true
+                                             //isLoginSuccessful = true
                                              isLoginFail = false
                                          }
                                          else{
                                              isLoginFail = true
-                                             isLoginSuccessful = false
+                                             //isLoginSuccessful = false
                                          }
                                      }
                 },
@@ -171,14 +171,10 @@ fun LoginScreen(auth: FirebaseAuth, navController: NavHostController, ) {
                 )
             }
         }
-        if (isLoginSuccessful) {
-            logInSuccess(email)
-        }
-        else if (isLoginFail){
+        if (isLoginFail){
             logInFail()
         }
         else{
-
         }
     }
 }
@@ -193,34 +189,35 @@ fun logInFail() {
     ) {
         Text(
             text = "Invalid email or password.",
+            color = Color.Red,
             fontFamily = FontFamily.Companion.SansSerif,
             fontWeight = FontWeight.Bold,
             fontStyle = FontStyle.Italic,
-            fontSize = 32.sp,
+            fontSize = 22.sp,
             modifier = Modifier.padding(top = 16.dp)
         )
     }
 }
 
-@Composable
-fun logInSuccess(email: String){
-    Column(
-        modifier = Modifier
-            .background(color = Color.LightGray)
-            .fillMaxSize(),
-        horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.Top,
-    ) {
-        Text(
-            text = "Welcome back $email!",
-            fontFamily = FontFamily.Companion.SansSerif,
-            fontWeight = FontWeight.Bold,
-            fontStyle = FontStyle.Italic,
-            fontSize = 32.sp,
-            modifier = Modifier.padding(top = 16.dp)
-        )
-    }
-}
+//@Composable
+//fun logInSuccess(email: String){
+//    Column(
+//        modifier = Modifier
+//            .background(color = Color.LightGray)
+//            .fillMaxSize(),
+//        horizontalAlignment = Alignment.CenterHorizontally,
+//        verticalArrangement = Arrangement.Top,
+//    ) {
+//        Text(
+//            text = "Welcome back $email!",
+//            fontFamily = FontFamily.Companion.SansSerif,
+//            fontWeight = FontWeight.Bold,
+//            fontStyle = FontStyle.Italic,
+//            fontSize = 32.sp,
+//            modifier = Modifier.padding(top = 16.dp)
+//        )
+//    }
+//}
 
 
 
