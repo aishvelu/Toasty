@@ -130,7 +130,7 @@ fun LoginScreen(auth: FirebaseAuth, navController: NavHostController, ) {
                                  auth.signInWithEmailAndPassword(email,password)
                                      .addOnCompleteListener{
                                          if (it.isSuccessful){
-                                             navController.navigate(BottomBarScreen.Goals.route)
+                                             navController.navigate("${BottomBarScreen.Goals.route}/$email")
                                              //isLoginSuccessful = true
                                              isLoginFail = false
                                          }

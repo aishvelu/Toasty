@@ -68,10 +68,17 @@ dependencies {
     implementation 'com.squareup.moshi:moshi:1.13.0'
     kapt 'com.squareup.moshi:moshi-kotlin-codegen:1.13.0'
     implementation 'com.squareup.picasso:picasso:2.8'
+    //coroutines
+    implementation 'org.jetbrains.kotlinx:kotlinx-coroutines-android:1.5.1'
     //Firebase
     implementation platform('com.google.firebase:firebase-bom:30.3.1')
     implementation 'com.google.firebase:firebase-analytics-ktx'
     implementation 'com.google.firebase:firebase-auth-ktx'
+    implementation 'com.google.firebase:firebase-database'
+    // Declare the dependency for the Cloud Firestore library
+    implementation 'com.google.firebase:firebase-firestore-ktx'
+
+    implementation "io.grpc:grpc-okhttp:1.32.2"
     //Material Design
     implementation "androidx.compose.material:material-icons-extended:$compose_version"
 }
