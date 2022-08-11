@@ -30,6 +30,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavHostController
 import com.example.mealapp.BottomBarScreen
+import com.example.mealapp.User
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.ktx.auth
 import com.google.firebase.ktx.Firebase
@@ -130,6 +131,7 @@ fun LoginScreen(auth: FirebaseAuth, navController: NavHostController, ) {
                                  auth.signInWithEmailAndPassword(email,password)
                                      .addOnCompleteListener{
                                          if (it.isSuccessful){
+                                             User.emailAddress = email
                                              navController.navigate("${BottomBarScreen.Goals.route}/$email")
                                              //isLoginSuccessful = true
                                              isLoginFail = false
