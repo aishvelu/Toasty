@@ -1,6 +1,7 @@
 package com.example.mealapp.screens
 
-import android.arch.persistence.room.Entity
+import androidx.room.Entity
+
 
 @Entity(tableName = "recipe")
 data class Recipe(
