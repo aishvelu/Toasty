@@ -13,6 +13,7 @@ import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import com.example.mealapp.BottomBarScreen
 import com.example.mealapp.BottomNavGraph
+import com.example.mealapp.User
 import com.google.firebase.auth.FirebaseAuth
 
 @Composable
@@ -67,10 +68,18 @@ fun RowScope.AddItem(
             it.route == screen.route
         } == true,
         unselectedContentColor = LocalContentColor.current.copy(alpha = ContentAlpha.disabled),
-        onClick = {
+        onClick = { if (screen is BottomBarScreen.Goals) {
+            navController.navigate("${screen.route}/${User.emailAddress}") {
+                popUpTo(navController.graph.findStartDestination().id)
+                launchSingleTop = true
+            }
+        }
+        else {
             navController.navigate(screen.route) {
                 popUpTo(navController.graph.findStartDestination().id)
                 launchSingleTop = true
+            }
+
             }
         }
     )
