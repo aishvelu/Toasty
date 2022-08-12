@@ -57,18 +57,20 @@ fun RowScope.AddItem(
 ) {
     BottomNavigationItem(
         label = {
-            Text(text = screen.title)
+            Text(text = screen.title,
+            color = Color.Black)
         },
         icon = {
             Icon(
                 imageVector = screen.icon,
-                contentDescription = "Navigation Icon"
+                contentDescription = "Navigation Icon",
+                tint = Color.Black
             )
         },
         selected = currentDestination?.hierarchy?.any {
             it.route == screen.route
         } == true,
-        unselectedContentColor = Color.White,
+        unselectedContentColor = Color.Black,
         onClick = { if (screen is BottomBarScreen.Goals) {
             navController.navigate("${screen.route}/${User.emailAddress}") {
                 popUpTo(navController.graph.findStartDestination().id)

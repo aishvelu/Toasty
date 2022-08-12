@@ -14,7 +14,7 @@ private val Chilanka = FontFamily(
 val  ChilankaTypography = Typography(
     h1 = TextStyle(
         fontFamily = FontFamily.Default,
-        fontWeight = FontWeight.W500,
+        fontWeight = FontWeight.W400,
         fontSize = 30.sp
     ),
     h2 = TextStyle(
@@ -24,7 +24,7 @@ val  ChilankaTypography = Typography(
     ),
     h3 = TextStyle(
         fontFamily = FontFamily.Default,
-        fontWeight = FontWeight.W300,
+        fontWeight = FontWeight.W400,
         fontSize = 20.sp
     ),
     body1 = TextStyle(
@@ -34,7 +34,7 @@ val  ChilankaTypography = Typography(
     ),
     button = TextStyle(
         fontFamily = FontFamily.Default,
-        fontWeight = FontWeight.W500,
+        fontWeight = FontWeight.W400,
         fontSize = 14.sp
 ),
     caption = TextStyle(

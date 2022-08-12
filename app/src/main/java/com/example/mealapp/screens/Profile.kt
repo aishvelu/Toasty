@@ -177,8 +177,10 @@ fun LoginScreen(auth: FirebaseAuth, navController: NavHostController, ) {
                     if (it.isSuccessful) {
                         //Registration OK
                         val firebaseUser = auth.currentUser!!
+                        isSignInSuccess = true
                     } else {
                         //Registration error
+                        isSignInSuccess = false
                     }
                 }
             },
@@ -239,12 +241,18 @@ fun signedUp(user: String?) {
         verticalArrangement = Arrangement.Top,
     ) {
         Text(
-            text = "You are signed up as $user! Please login.",
+            text = "You are signed up as $user!",
             color = Color.Black,
-            fontFamily = FontFamily.Companion.SansSerif,
+            style = MaterialTheme.typography.body1,
             fontWeight = FontWeight.Bold,
-            fontStyle = FontStyle.Italic,
-            fontSize = 22.sp,
+            modifier = Modifier.padding(top = 16.dp)
+        )
+        Spacer(modifier = Modifier.padding(8.dp))
+        Text(
+            text = "Please Login.",
+            color = Color.Black,
+            style = MaterialTheme.typography.body1,
+            fontWeight = FontWeight.Bold,
             modifier = Modifier.padding(top = 16.dp)
         )
     }

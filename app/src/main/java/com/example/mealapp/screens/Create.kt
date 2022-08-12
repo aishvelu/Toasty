@@ -51,17 +51,24 @@ data class GistFile(var content: String?)
 fun CreateScreen() {
     Column(
         modifier = Modifier
-            .fillMaxSize()
-            .background(Color.White),
-        horizontalAlignment = Alignment.CenterHorizontally
+            .background(color = Color.White)
+            .fillMaxSize(),
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.Top,
     ) {
-        Text(
-            text = "Add Ingredients",
-            modifier = Modifier.padding(16.dp),
-            //fontSize = 24.sp,
-            //fontWeight = FontWeight.Bold,
-            style = MaterialTheme.typography.h3
-        )
+        Column(
+            modifier = Modifier
+                .background(color = MaterialTheme.colors.primaryVariant)
+                .requiredSize(width = 600.dp, height = 75.dp),
+            horizontalAlignment = Alignment.CenterHorizontally,
+        ){
+            Text(
+                text = "Select Your Ingredients",
+                style = MaterialTheme.typography.h2,
+                modifier = Modifier
+                    .padding(top = 16.dp)
+            )
+        }
         Ingredients()
     }
 }
