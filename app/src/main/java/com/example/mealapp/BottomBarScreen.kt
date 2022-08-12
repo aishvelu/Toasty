@@ -16,14 +16,14 @@ sealed class BottomBarScreen(
         icon = Icons.Default.Person
     )
     object Goals : BottomBarScreen(
-        route = "goals",
-        title = "Goals",
-        icon = Icons.Default.Star
+        route = "MyBook",
+        title = "MyBook",
+        icon = Icons.Filled.Description
     )
     object Saved : BottomBarScreen(
         route = "saved",
         title = "Saved",
-        icon = Icons.Default.AccountBox
+        icon = Icons.Filled.Favorite
     )
     object Create : BottomBarScreen(
         route = "create",

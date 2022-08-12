@@ -9,6 +9,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.*
 import androidx.compose.runtime.*
 import androidx.compose.runtime.snapshots.SnapshotStateList
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.input.TextFieldValue
@@ -35,8 +36,16 @@ fun RecipeForm(userId: String?) {
     Column(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(8.dp)
+            .padding(8.dp),
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.Top,
     ) {
+        Text(
+            text = "My Content",
+            style = MaterialTheme.typography.h3,
+            modifier = Modifier
+                .padding(top = 16.dp)
+        )
         DetailInput(fieldValue = titleValue, label = "Title")
         DetailInput(fieldValue = ingredientsValue, label = "Ingredients", singleLine = false)
         DetailInput(fieldValue = processValue, label = "Process", singleLine = false)
@@ -99,6 +108,7 @@ fun RecipeListItem(recipe: Recipe) {
     Card(
         modifier = Modifier.padding(end = 8.dp),
         shape = RoundedCornerShape(4.dp),
+        backgroundColor = MaterialTheme.colors.secondaryVariant,
         elevation = 2.dp
     ) {
         Column(
