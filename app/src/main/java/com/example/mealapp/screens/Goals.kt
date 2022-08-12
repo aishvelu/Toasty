@@ -86,7 +86,7 @@ fun RecipeForm(userId: String?) {
     }
 }
 
-private fun showToast(context: Context, msg: String) {
+fun showToast(context: Context, msg: String) {
     Toast.makeText(
         context,
         msg,

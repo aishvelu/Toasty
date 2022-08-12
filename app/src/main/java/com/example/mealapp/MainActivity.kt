@@ -10,6 +10,8 @@ import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.recyclerview.widget.GridLayoutManager
+import androidx.recyclerview.widget.RecyclerView
 import com.example.mealapp.ui.theme.MainScreen
 import com.example.mealapp.ui.theme.MealAppTheme
 import com.google.firebase.auth.ktx.auth

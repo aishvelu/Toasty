@@ -1,4 +1,11 @@
 package com.example.mealapp.screens
+import android.content.Context
+import android.os.Bundle
+import android.view.View
+import android.widget.ImageView
+import android.widget.ListView
+import androidx.activity.ComponentActivity
+import androidx.activity.compose.setContent
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -17,6 +24,7 @@ import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.layout.onGloballyPositioned
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
@@ -24,31 +32,34 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.unit.toSize
+import androidx.recyclerview.widget.GridLayoutManager
+import androidx.recyclerview.widget.RecyclerView
+import com.example.mealapp.PhotoAdapter
 import com.example.mealapp.R
-import com.squareup.moshi.JsonClass
-import com.squareup.moshi.Moshi
+import com.example.mealapp.ui.theme.MainScreen
+import com.example.mealapp.ui.theme.MealAppTheme
+import com.google.firebase.auth.ktx.auth
+import com.google.firebase.ktx.Firebase
+import com.squareup.moshi.*
 import com.squareup.picasso.Picasso
-import okhttp3.OkHttpClient
-import okhttp3.Request
+import okhttp3.*
 import okio.IOException
+import org.json.JSONObject
+
 
 private val client = OkHttpClient()
 private val moshi = Moshi.Builder().build()
-private val gistJsonAdapter = moshi.adapter(Gist::class.java)
+@OptIn(ExperimentalStdlibApi::class)
+private val jsonAdapter: JsonAdapter<ResponseRecipe> = moshi.adapter<ResponseRecipe>()
 private val url = "https://tasty.p.rapidapi.com/recipes/list?from=0&size=10&tags=under_30_minutes&q="
-
-
-
-@JsonClass(generateAdapter = true)
-data class Gist(var files: Map<String, GistFile>?)
-
-@JsonClass(generateAdapter = true)
-data class GistFile(var content: String?)
+private lateinit var photoAdapter: PhotoAdapter
+private var dataList = mutableListOf<RecipeInfo>()
 
 
 
 @Composable
 fun CreateScreen() {
+    val context = LocalContext.current
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -62,16 +73,40 @@ fun CreateScreen() {
             fontWeight = FontWeight.Bold,
             color = Color.Magenta
         )
-        Ingredients()
+        var ing = Ingredients()
+        var rec: ResponseRecipe? = ResponseRecipe(0)
+        Button(onClick = {
+            if(ing.size > 0) {
+                rec = getRecipeImage(ingredients = ing)
+            }
+            else {
+                showToast(context, "No input")
+            }
+        }) {
+            Text("Create")
+        }
+
+        if(rec?.count?.compareTo(0)!! > 0) {
+            rec!!.results.forEach { recipe ->
+                Column(
+                    modifier = Modifier.fillMaxSize(),
+                    horizontalAlignment = Alignment.CenterHorizontally
+                ) {
+
+                }
+            }
+        }
     }
 }
 @Composable
-private fun Ingredients(count: List<String> = List(3) { "$it" }) {
+private fun Ingredients(count: List<String> = List(3) { "$it" }): MutableList<MutableState<String>> {
+    val ing = mutableListOf<MutableState<String>>()
     LazyColumn(modifier = Modifier.padding(vertical = 4.dp)) {
         items(items = count) {
-            TopAppBarDropdownMenu()
+            ing.add(TopAppBarDropdownMenu())
         }
     }
+    return ing
 }
 
 @Composable
@@ -104,7 +139,7 @@ fun NestedMenu(onValueChange: () -> Unit, expandedNested:MutableState<Boolean>,
     }
 }
 @Composable
-fun TopAppBarDropdownMenu() {
+fun TopAppBarDropdownMenu(): MutableState<String> {
     var expandedMain = remember { mutableStateOf(false) }
     var expandedNested = remember { mutableStateOf(false) }
     var expandedNestedLabel = remember { mutableStateOf("") }
@@ -223,16 +258,14 @@ fun TopAppBarDropdownMenu() {
 
         }
     }
+    return selectedText
 }
 
-@Composable
-fun RecipeImage(ingredient_1: String, ingredient_2: String = "", ingredient_3: String = "") {
-    var urlmod = url + ingredient_1
-    if(!ingredient_2.equals("")){
-        urlmod += ingredient_2
-    }
-    if(!ingredient_3.equals("")){
-        urlmod += ingredient_3
+
+fun getRecipeImage(ingredients: MutableList<MutableState<String>>): ResponseRecipe? {
+    var urlmod = url
+    for(ingredient in ingredients){
+        urlmod += ingredient
     }
 
     val request = Request.Builder()
@@ -244,14 +277,42 @@ fun RecipeImage(ingredient_1: String, ingredient_2: String = "", ingredient_3: S
     client.newCall(request).execute().use { response ->
         if (!response.isSuccessful) throw IOException("Unexpected code $response")
 
-        val gist = gistJsonAdapter.fromJson(response.body!!.source())
+        val recipes = jsonAdapter.fromJson(response.body!!.source())
 
-        for ((key, value) in gist!!.files!!) {
-            println(key)
-            println(value.content)
-        }
+        return recipes
     }
 }
+
+@JsonClass(generateAdapter = true)
+data class ResponseRecipe(
+    val count: Int,
+    val results: ArrayList<RecipeInfo> = arrayListOf<RecipeInfo>()
+)
+
+@JsonClass(generateAdapter = true)
+data class Gist(var files: Map<String, GistFile>?)
+
+@JsonClass(generateAdapter = true)
+data class GistFile(var content: String?)
+
+
+data class RecipeInfo(
+    @Json(name = "id") val id: Int,
+    @Json(name = "name")val name: String,
+    @Json(name = "description")val description: String = "",
+    @Json(name = "instructions")val instructions: List<Instruction>,
+    @Json(name = "video_url")val video_url: String = "",
+    @Json(name = "thumbnail_url")val thumbnail_url: String = "",
+    val cook_time_minutes: Int,
+    val prep_time_minutes: Int
+)
+
+data class Instruction(
+    val id: Int,
+    val display_text: String,
+    val position: Int
+)
+
 
 @Composable
 @Preview
