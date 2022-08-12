@@ -2,6 +2,7 @@ package com.example.mealapp.screens
 
 import android.content.Context
 import android.widget.Toast
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -11,6 +12,7 @@ import androidx.compose.runtime.*
 import androidx.compose.runtime.snapshots.SnapshotStateList
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.unit.dp
@@ -35,17 +37,24 @@ fun RecipeForm(userId: String?) {
 
     Column(
         modifier = Modifier
-            .fillMaxWidth()
-            .padding(8.dp),
+            .background(color = Color.White)
+            .fillMaxSize(),
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Top,
     ) {
-        Text(
-            text = "My Content",
-            style = MaterialTheme.typography.h3,
+        Column(
             modifier = Modifier
-                .padding(top = 16.dp)
-        )
+                .background(color = MaterialTheme.colors.primaryVariant)
+                .requiredSize(width = 600.dp, height = 75.dp),
+            horizontalAlignment = Alignment.CenterHorizontally,
+        ){
+            Text(
+                text = "Chef Up Your Own",
+                style = MaterialTheme.typography.h2,
+                modifier = Modifier
+                    .padding(top = 16.dp)
+            )
+        }
         DetailInput(fieldValue = titleValue, label = "Title")
         DetailInput(fieldValue = ingredientsValue, label = "Ingredients", singleLine = false)
         DetailInput(fieldValue = processValue, label = "Process", singleLine = false)
@@ -79,7 +88,8 @@ fun RecipeForm(userId: String?) {
 
 
             }) {
-            Text(text = "Save")
+            Text(text = "Save",
+            color = Color.Black)
         }
         if(isSaved.value) {
             RecipeService.getRecipes(recipes, userId)
