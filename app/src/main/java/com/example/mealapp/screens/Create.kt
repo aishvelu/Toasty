@@ -58,9 +58,9 @@ fun CreateScreen() {
         Text(
             text = "Add Ingredients",
             modifier = Modifier.padding(16.dp),
-            fontSize = 24.sp,
-            fontWeight = FontWeight.Bold,
-            color = Color.Magenta
+            //fontSize = 24.sp,
+            //fontWeight = FontWeight.Bold,
+            style = MaterialTheme.typography.h3
         )
         Ingredients()
     }

@@ -17,6 +17,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusDirection
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontStyle
@@ -25,6 +26,7 @@ import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -43,36 +45,43 @@ fun ProfileScreen(auth: FirebaseAuth, navController: NavHostController) {
 
 @Composable
 fun LoginScreen(auth: FirebaseAuth, navController: NavHostController, ) {
+    val context = LocalContext.current
     val focusManager = LocalFocusManager.current
     var email by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
     val isEmailValid by derivedStateOf{ Patterns.EMAIL_ADDRESS.matcher(email).matches()}
     val isPasswordValid by derivedStateOf { password.length > 7 }
     var isPasswordVisible by remember { mutableStateOf(false)}
-    //var isLoginSuccessful by remember { mutableStateOf(false)}
+    var isSignInSuccess by remember { mutableStateOf(false)}
     var isLoginFail by remember { mutableStateOf(false)}
     Column(
         modifier = Modifier
-            .background(color = Color.LightGray)
+            .background(color = Color.White)
             .fillMaxSize(),
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Top,
-    ){
+    ) {
+        Column(
+            modifier = Modifier
+                .background(color = MaterialTheme.colors.primary)
+                .requiredSize(width = 600.dp, height = 75.dp),
+            horizontalAlignment = Alignment.CenterHorizontally,
+        ){
         Text(
-            text = "Welcome to RecipePad!",
-            fontFamily = FontFamily.Companion.SansSerif,
-            fontWeight = FontWeight.Bold,
-            fontStyle = FontStyle.Italic,
-            fontSize = 32.sp,
-            modifier = Modifier.padding(top = 16.dp)
+            text = "Welcome to Toasty!",
+            style = MaterialTheme.typography.h1,
+            modifier = Modifier
+                .padding(top = 16.dp)
         )
+    }
         Spacer (modifier = Modifier.padding(24.dp))
         Card(
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(horizontal = 8.dp),
+            backgroundColor = MaterialTheme.colors.secondary,
             shape = RoundedCornerShape(16.dp),
-            border = BorderStroke(1.dp, Color.Black)
+            border = BorderStroke(1.dp, Color.White)
         ){
             Column(
                 horizontalAlignment = Alignment.CenterHorizontally,
@@ -80,6 +89,7 @@ fun LoginScreen(auth: FirebaseAuth, navController: NavHostController, ) {
                 modifier = Modifier.padding(all = 10.dp)
             ){
                 OutlinedTextField(
+                    textStyle = MaterialTheme.typography.body1,
                     value = email,
                     onValueChange = {email = it},
                     label = {Text("Email Address")},
@@ -104,6 +114,7 @@ fun LoginScreen(auth: FirebaseAuth, navController: NavHostController, ) {
                     }
                 )
                 OutlinedTextField(
+                    textStyle = MaterialTheme.typography.body1,
                     value = password,
                     onValueChange = {password = it},
                     label = {Text("Password")},
@@ -134,9 +145,11 @@ fun LoginScreen(auth: FirebaseAuth, navController: NavHostController, ) {
                                              User.emailAddress = email
                                              navController.navigate("${BottomBarScreen.Goals.route}/$email")
                                              //isLoginSuccessful = true
+                                             isSignInSuccess = false
                                              isLoginFail = false
                                          }
                                          else{
+                                             isSignInSuccess = false
                                              isLoginFail = true
                                              //isLoginSuccessful = false
                                          }
@@ -144,13 +157,14 @@ fun LoginScreen(auth: FirebaseAuth, navController: NavHostController, ) {
                 },
                     enabled = isEmailValid && isPasswordValid,
                     modifier = Modifier.fillMaxWidth(),
-                    colors = ButtonDefaults.buttonColors(backgroundColor = Color.Red)
+                    colors = ButtonDefaults.buttonColors(backgroundColor = MaterialTheme.colors.secondaryVariant)
                 ){
                     Text(
                         text = "Log in",
+                        style = MaterialTheme.typography.body1,
                         fontWeight = FontWeight.Bold,
                         color = Color.Black,
-                        fontSize = 16.sp,
+                        //fontSize = 16.sp,
                     )
                 }
             }
@@ -158,23 +172,38 @@ fun LoginScreen(auth: FirebaseAuth, navController: NavHostController, ) {
         Row(horizontalArrangement = Arrangement.End,
             modifier = Modifier.fillMaxWidth()
         ){
-            Button(onClick = {},
+            Button(onClick = {
+                auth.createUserWithEmailAndPassword(email, password).addOnCompleteListener { it ->
+                    if (it.isSuccessful) {
+                        //Registration OK
+                        val firebaseUser = auth.currentUser!!
+                    } else {
+                        //Registration error
+                    }
+                }
+            },
                 enabled = true,
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(all = 16.dp),
-                colors = ButtonDefaults.buttonColors(backgroundColor = Color.White)
+                colors = ButtonDefaults.buttonColors(backgroundColor = MaterialTheme.colors.primaryVariant)
             ){
                 Text(
                     text = "Register",
+                    style = MaterialTheme.typography.body1,
                     fontWeight = FontWeight.Bold,
                     color = Color.Black,
-                    fontSize = 16.sp,
+                    //fontSize = 16.sp,
                 )
             }
         }
         if (isLoginFail){
             logInFail()
+        }
+        else{
+        }
+        if (isSignInSuccess){
+            signedUp(email)
         }
         else{
         }
@@ -184,7 +213,7 @@ fun LoginScreen(auth: FirebaseAuth, navController: NavHostController, ) {
 fun logInFail() {
     Column(
         modifier = Modifier
-            .background(color = Color.LightGray)
+            .background(color = Color.White)
             .fillMaxSize(),
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Top,
@@ -192,6 +221,26 @@ fun logInFail() {
         Text(
             text = "Invalid email or password.",
             color = Color.Red,
+            fontFamily = FontFamily.Companion.SansSerif,
+            fontWeight = FontWeight.Bold,
+            fontStyle = FontStyle.Italic,
+            fontSize = 22.sp,
+            modifier = Modifier.padding(top = 16.dp)
+        )
+    }
+}
+@Composable
+fun signedUp(user: String?) {
+    Column(
+        modifier = Modifier
+            .background(color = Color.White)
+            .fillMaxSize(),
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.Top,
+    ) {
+        Text(
+            text = "You are signed up as $user! Please login.",
+            color = Color.Black,
             fontFamily = FontFamily.Companion.SansSerif,
             fontWeight = FontWeight.Bold,
             fontStyle = FontStyle.Italic,
