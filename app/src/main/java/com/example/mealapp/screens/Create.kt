@@ -1,5 +1,8 @@
 package com.example.mealapp.screens
 import android.content.Context
+import android.graphics.Bitmap
+import android.graphics.drawable.Drawable
+import android.media.Image
 import android.os.Build
 import android.widget.Toast
 import androidx.annotation.RequiresApi
@@ -29,10 +32,14 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.unit.toSize
 import coil.compose.rememberAsyncImagePainter
+import com.example.mealapp.R
 import com.squareup.moshi.*
 import com.squareup.moshi.kotlin.reflect.KotlinJsonAdapterFactory
+import com.squareup.picasso.Picasso
+import com.squareup.picasso.Target
 import okhttp3.*
 import okio.IOException
+import java.lang.Exception
 import java.util.concurrent.CompletableFuture
 
 
@@ -42,7 +49,6 @@ private val moshi = Moshi.Builder()
 @OptIn(ExperimentalStdlibApi::class)
 private val jsonAdapter: JsonAdapter<ResponseRecipe> = moshi.adapter<ResponseRecipe>()
 private val url = "https://tasty.p.rapidapi.com/recipes/list?from=0&size=10&tags=under_30_minutes&q="
-
 
 
 @Composable
@@ -77,12 +83,43 @@ fun CreateScreen() {
         if(rec?.count?.compareTo(0)!! > 0) {
             rec!!.results.forEach { recipe ->
                 Column(
-                    modifier = Modifier.fillMaxSize(),
+                    //modifier = Modifier.fillMaxSize(),
                     horizontalAlignment = Alignment.CenterHorizontally
                 ) {
                     Image(painter = rememberAsyncImagePainter(recipe.thumbnail_url), contentDescription = null)
                 }
             }
+        }
+    }
+}
+
+@Composable
+fun NetworkImage(url: String) {
+    var image by remember {mutableStateOf<Image?>(null)}
+    var drawable by remember {mutableStateOf<Drawable?>(null)}
+
+    val onCommit: (url: String) -> Unit = {
+        val picasso = Picasso.get()
+
+        val target = object: Target {
+            override fun onPrepareLoad(placeHolderDrawable: Drawable?) {
+                drawable = placeHolderDrawable
+            }
+
+            override fun onBitmapFailed(e: Exception?, errorDrawable: Drawable?) {
+                drawable = errorDrawable
+            }
+
+            override fun onBitmapLoaded(bitmap: Bitmap?, from: Picasso.LoadedFrom?) {
+                image = bitmap?.asImage()
+            }
+        }
+        picasso.load(url).into(target)
+
+        onDispose {
+            image = null
+            drawable = null
+            picasso.cancelRequest(target)
         }
     }
 }
@@ -259,7 +296,7 @@ fun TopAppBarDropdownMenu(): MutableState<String> {
 fun getRecipeImage(ingredients: MutableList<MutableState<String>>): ResponseRecipe? {
     var urlmod = url
     for(ingredient in ingredients){
-        urlmod += ingredient
+        urlmod += "+" + ingredient
     }
 
     val request = Request.Builder()
