@@ -1,11 +1,8 @@
 package com.example.mealapp.screens
 import android.content.Context
-import android.os.Bundle
-import android.view.View
-import android.widget.ImageView
-import android.widget.ListView
-import androidx.activity.ComponentActivity
-import androidx.activity.compose.setContent
+import android.os.Build
+import android.widget.Toast
+import androidx.annotation.RequiresApi
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -16,7 +13,6 @@ import androidx.compose.material.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.KeyboardArrowDown
 import androidx.compose.material.icons.filled.KeyboardArrowUp
-import androidx.compose.material.icons.filled.Menu
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -32,28 +28,20 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.unit.toSize
-import androidx.recyclerview.widget.GridLayoutManager
-import androidx.recyclerview.widget.RecyclerView
-import com.example.mealapp.PhotoAdapter
-import com.example.mealapp.R
-import com.example.mealapp.ui.theme.MainScreen
-import com.example.mealapp.ui.theme.MealAppTheme
-import com.google.firebase.auth.ktx.auth
-import com.google.firebase.ktx.Firebase
+import coil.compose.rememberAsyncImagePainter
 import com.squareup.moshi.*
-import com.squareup.picasso.Picasso
+import com.squareup.moshi.kotlin.reflect.KotlinJsonAdapterFactory
 import okhttp3.*
 import okio.IOException
-import org.json.JSONObject
+import java.util.concurrent.CompletableFuture
 
 
 private val client = OkHttpClient()
-private val moshi = Moshi.Builder().build()
+private val moshi = Moshi.Builder()
+    .addLast(KotlinJsonAdapterFactory()).build()
 @OptIn(ExperimentalStdlibApi::class)
 private val jsonAdapter: JsonAdapter<ResponseRecipe> = moshi.adapter<ResponseRecipe>()
 private val url = "https://tasty.p.rapidapi.com/recipes/list?from=0&size=10&tags=under_30_minutes&q="
-private lateinit var photoAdapter: PhotoAdapter
-private var dataList = mutableListOf<RecipeInfo>()
 
 
 
@@ -80,7 +68,7 @@ fun CreateScreen() {
                 rec = getRecipeImage(ingredients = ing)
             }
             else {
-                showToast(context, "No input")
+                showToasts(context, "Ingredients required")
             }
         }) {
             Text("Create")
@@ -92,12 +80,17 @@ fun CreateScreen() {
                     modifier = Modifier.fillMaxSize(),
                     horizontalAlignment = Alignment.CenterHorizontally
                 ) {
-
+                    Image(painter = rememberAsyncImagePainter(recipe.thumbnail_url), contentDescription = null)
                 }
             }
         }
     }
 }
+
+fun showToasts(context: Context, text: String) {
+    Toast.makeText(context, text, Toast.LENGTH_SHORT).show()
+}
+
 @Composable
 private fun Ingredients(count: List<String> = List(3) { "$it" }): MutableList<MutableState<String>> {
     val ing = mutableListOf<MutableState<String>>()
@@ -189,11 +182,12 @@ fun TopAppBarDropdownMenu(): MutableState<String> {
                 .width(with(LocalDensity.current){textfieldSize.value.width.toDp()})
         ) {
             suggestions.forEach { label ->
-                DropdownMenuItem(onClick = {
-                    expandedMain.value = false
-                    expandedNested.value = true
-                    expandedNestedLabel.value = label
-                },
+                DropdownMenuItem(
+                    onClick = {
+                        expandedMain.value = false
+                        expandedNested.value = true
+                        expandedNestedLabel.value = label
+                    },
                 ){
                     Row(horizontalArrangement = Arrangement.Start) {
                         Text(text = label)
@@ -274,19 +268,32 @@ fun getRecipeImage(ingredients: MutableList<MutableState<String>>): ResponseReci
         .addHeader("X-RapidAPI-Key", "1fce4d8ce8mshb43ee73e23131ecp128481jsn7574c01064bf")
         .addHeader("X-RapidAPI-Host", "tasty.p.rapidapi.com")
         .build()
-    client.newCall(request).execute().use { response ->
-        if (!response.isSuccessful) throw IOException("Unexpected code $response")
+    var recipeI: ResponseRecipe
+    client.newCall(request).enqueue(object : Callback {
+        override fun onFailure(call: Call, e: java.io.IOException) {
+            e.printStackTrace()
+        }
 
-        val recipes = jsonAdapter.fromJson(response.body!!.source())
+        override fun onResponse(call: Call, response: Response) {
+            response.use {
+                if (!response.isSuccessful) throw IOException("Unexpected code $response")
 
-        return recipes
-    }
+                val recipes = jsonAdapter.fromJson(response.body!!.source())
+
+                if (recipes != null) {
+                    recipeI = recipes
+                }
+            }
+        }
+    })
+    return recipeI
 }
+
 
 @JsonClass(generateAdapter = true)
 data class ResponseRecipe(
     val count: Int,
-    val results: ArrayList<RecipeInfo> = arrayListOf<RecipeInfo>()
+    val results: List<RecipeInfo> = listOf<RecipeInfo>()
 )
 
 @JsonClass(generateAdapter = true)
