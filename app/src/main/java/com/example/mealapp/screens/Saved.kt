@@ -5,6 +5,7 @@ import android.os.Bundle
 import android.view.WindowManager
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
@@ -23,6 +24,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.ViewModelProvider
 import coil.compose.AsyncImage
+import coil.compose.rememberAsyncImagePainter
 import okhttp3.OkHttpClient
 import okhttp3.Request
 import okio.IOException
@@ -55,10 +57,11 @@ fun SavedScreen() {
                     .padding(0.dp)
             )
         }
+        showSaved()
 
 
     }
-    showSaved()
+
 }
 
 @Composable
