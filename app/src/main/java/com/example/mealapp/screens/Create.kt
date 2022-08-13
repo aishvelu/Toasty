@@ -3,7 +3,9 @@ import android.content.Context
 import android.graphics.Bitmap
 import android.graphics.drawable.Drawable
 import android.media.Image
+import android.net.Network
 import android.os.Build
+import android.util.Log
 import android.widget.Toast
 import androidx.annotation.RequiresApi
 import androidx.compose.foundation.Image
@@ -31,16 +33,27 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.unit.toSize
+import coil.compose.AsyncImage
 import coil.compose.rememberAsyncImagePainter
 import com.example.mealapp.R
 import com.squareup.moshi.*
 import com.squareup.moshi.kotlin.reflect.KotlinJsonAdapterFactory
 import com.squareup.picasso.Picasso
 import com.squareup.picasso.Target
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.cancel
+import kotlinx.coroutines.channels.awaitClose
+import kotlinx.coroutines.channels.onFailure
+import kotlinx.coroutines.channels.trySendBlocking
+import kotlinx.coroutines.flow.callbackFlow
+import kotlinx.coroutines.flow.catch
+import kotlinx.coroutines.launch
 import okhttp3.*
 import okio.IOException
 import java.lang.Exception
 import java.util.concurrent.CompletableFuture
+import kotlin.concurrent.thread
 
 
 private val client = OkHttpClient()
@@ -49,6 +62,8 @@ private val moshi = Moshi.Builder()
 @OptIn(ExperimentalStdlibApi::class)
 private val jsonAdapter: JsonAdapter<ResponseRecipe> = moshi.adapter<ResponseRecipe>()
 private val url = "https://tasty.p.rapidapi.com/recipes/list?from=0&size=10&tags=under_30_minutes&q="
+var showImages = mutableStateOf(false)
+var result: ResponseRecipe? = null
 
 
 @Composable
@@ -71,7 +86,7 @@ fun CreateScreen() {
         var rec: ResponseRecipe? = ResponseRecipe(0)
         Button(onClick = {
             if(ing.size > 0) {
-                rec = getRecipeImage(ingredients = ing)
+                fetchData(url, ing)
             }
             else {
                 showToasts(context, "Ingredients required")
@@ -79,50 +94,76 @@ fun CreateScreen() {
         }) {
             Text("Create")
         }
+        if(showImages.value) {
+            displayRecipeImage(result = result)
+        }
+    }
+}
 
-        if(rec?.count?.compareTo(0)!! > 0) {
-            rec!!.results.forEach { recipe ->
-                Column(
-                    //modifier = Modifier.fillMaxSize(),
-                    horizontalAlignment = Alignment.CenterHorizontally
-                ) {
-                    Image(painter = rememberAsyncImagePainter(recipe.thumbnail_url), contentDescription = null)
+fun fetchData(url: String, ingredients: MutableList<MutableState<String>>) {
+    var coroutineScope = CoroutineScope(Dispatchers.IO)
+    coroutineScope.launch {
+        Log.d("Track", "Launch Fetch Started")
+        fetch(url, ingredients = ingredients).catch {
+            Log.d("tag", "There was a problem"+it)
+        }
+            .collect {
+                result = jsonAdapter.fromJson(it.body!!.source())!!
+                // "it" is the `Response` object from OkHTTP
+            }
+        launch(Dispatchers.Main) {
+            when(result?.count) {
+                1 -> {
+                    showImages = mutableStateOf(true)
                 }
+                else -> showImages = mutableStateOf(true)
             }
         }
     }
 }
+
 
 @Composable
-fun NetworkImage(url: String) {
-    var image by remember {mutableStateOf<Image?>(null)}
-    var drawable by remember {mutableStateOf<Drawable?>(null)}
-
-    val onCommit: (url: String) -> Unit = {
-        val picasso = Picasso.get()
-
-        val target = object: Target {
-            override fun onPrepareLoad(placeHolderDrawable: Drawable?) {
-                drawable = placeHolderDrawable
+fun displayRecipeImage(result: ResponseRecipe?) {
+    LazyColumn {
+        if (result != null) {
+            items(result.results) { item: RecipeInfo ->
+                AsyncImage(model = item.thumbnail_url, contentDescription = null)
             }
-
-            override fun onBitmapFailed(e: Exception?, errorDrawable: Drawable?) {
-                drawable = errorDrawable
-            }
-
-            override fun onBitmapLoaded(bitmap: Bitmap?, from: Picasso.LoadedFrom?) {
-                image = bitmap?.asImage()
-            }
-        }
-        picasso.load(url).into(target)
-
-        onDispose {
-            image = null
-            drawable = null
-            picasso.cancelRequest(target)
         }
     }
 }
+
+//@Composable
+//fun NetworkImage(url: String) {
+//    var image by remember {mutableStateOf<Image?>(null)}
+//    var drawable by remember {mutableStateOf<Drawable?>(null)}
+//
+//    val onCommit: (url: String) -> Unit = {
+//        val picasso = Picasso.get()
+//
+//        val target = object: Target {
+//            override fun onPrepareLoad(placeHolderDrawable: Drawable?) {
+//                drawable = placeHolderDrawable
+//            }
+//
+//            override fun onBitmapFailed(e: Exception?, errorDrawable: Drawable?) {
+//                drawable = errorDrawable
+//            }
+//
+//            override fun onBitmapLoaded(bitmap: Bitmap?, from: Picasso.LoadedFrom?) {
+//                image = bitmap?.asImage()
+//            }
+//        }
+//        picasso.load(url).into(target)
+//
+//        onDispose {
+//            image = null
+//            drawable = null
+//            picasso.cancelRequest(target)
+//        }
+//    }
+//}
 
 fun showToasts(context: Context, text: String) {
     Toast.makeText(context, text, Toast.LENGTH_SHORT).show()
@@ -293,43 +334,43 @@ fun TopAppBarDropdownMenu(): MutableState<String> {
 }
 
 
-fun getRecipeImage(ingredients: MutableList<MutableState<String>>): ResponseRecipe? {
-    var urlmod = url
-    for(ingredient in ingredients){
-        urlmod += "+" + ingredient
-    }
-
-    val request = Request.Builder()
-        .url(urlmod)
-        .get()
-        .addHeader("X-RapidAPI-Key", "1fce4d8ce8mshb43ee73e23131ecp128481jsn7574c01064bf")
-        .addHeader("X-RapidAPI-Host", "tasty.p.rapidapi.com")
-        .build()
-    var recipeI: ResponseRecipe
-    client.newCall(request).enqueue(object : Callback {
-        override fun onFailure(call: Call, e: java.io.IOException) {
-            e.printStackTrace()
-        }
-
-        override fun onResponse(call: Call, response: Response) {
-            response.use {
-                if (!response.isSuccessful) throw IOException("Unexpected code $response")
-
-                val recipes = jsonAdapter.fromJson(response.body!!.source())
-
-                if (recipes != null) {
-                    recipeI = recipes
-                }
-            }
-        }
-    })
-    return recipeI
-}
+//fun getRecipeImage(ingredients: MutableList<MutableState<String>>): ResponseRecipe? {
+//    var urlmod = url
+//    for(ingredient in ingredients){
+//        urlmod += "+" + ingredient
+//    }
+//
+//    val request = Request.Builder()
+//        .url(urlmod)
+//        .get()
+//        .addHeader("X-RapidAPI-Key", "1fce4d8ce8mshb43ee73e23131ecp128481jsn7574c01064bf")
+//        .addHeader("X-RapidAPI-Host", "tasty.p.rapidapi.com")
+//        .build()
+//    var recipeI: ResponseRecipe
+//    client.newCall(request).enqueue(object : Callback {
+//        override fun onFailure(call: Call, e: java.io.IOException) {
+//            e.printStackTrace()
+//        }
+//
+//        override fun onResponse(call: Call, response: Response) {
+//            response.use {
+//                if (!response.isSuccessful) throw IOException("Unexpected code $response")
+//
+//                val recipes = jsonAdapter.fromJson(response.body!!.source())
+//
+//                if (recipes != null) {
+//                    recipeI = recipes
+//                }
+//            }
+//        }
+//    })
+//    return recipeI
+//}
 
 
 @JsonClass(generateAdapter = true)
 data class ResponseRecipe(
-    val count: Int,
+    val count: Int = 0,
     val results: List<RecipeInfo> = listOf<RecipeInfo>()
 )
 
@@ -356,6 +397,36 @@ data class Instruction(
     val display_text: String,
     val position: Int
 )
+
+fun fetch(
+    url: String,
+    client: OkHttpClient = OkHttpClient.Builder().build(),
+    request: Request.Builder = Request.Builder(),
+    ingredients: MutableList<MutableState<String>>
+) = callbackFlow<Response> {
+    var urlmod = url
+    for(ingredient in ingredients){
+        urlmod += "+" + ingredient
+    }
+    val req = request.url(urlmod).get()
+        .addHeader("X-RapidAPI-Key", "1fce4d8ce8mshb43ee73e23131ecp128481jsn7574c01064bf")
+        .addHeader("X-RapidAPI-Host", "tasty.p.rapidapi.com")
+        .build()
+    client.newCall(req).enqueue(object : Callback {
+        override fun onResponse(call: Call, resp: Response) {
+            if(resp.isSuccessful) {
+                trySendBlocking(resp)
+                    .onFailure { /* log it */ }
+            } else {
+                cancel("bad http code")
+            }
+        }
+        override fun onFailure(call: Call, e: IOException) {
+            cancel("okhttp error", e)
+        }
+    })
+    awaitClose {  }
+}
 
 
 @Composable
