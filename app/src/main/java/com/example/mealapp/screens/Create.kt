@@ -24,6 +24,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.unit.toSize
+import coil.compose.AsyncImage
 import com.example.mealapp.R
 import com.squareup.moshi.JsonClass
 import com.squareup.moshi.Moshi
@@ -36,7 +37,19 @@ private val client = OkHttpClient()
 private val moshi = Moshi.Builder().build()
 private val gistJsonAdapter = moshi.adapter(Gist::class.java)
 private val url = "https://tasty.p.rapidapi.com/recipes/list?from=0&size=10&tags=under_30_minutes&q="
+val linkList = listOf<String>("https://img.buzzfeed.com/tasty-app-user-assets-prod-us-east-1/recipes/4ea6c7ca275a4112b063af2cd4ffe13d.jpeg",
 
+    "https://img.buzzfeed.com/tasty-app-user-assets-prod-us-east-1/recipes/79237d0c898649c5bb373483f792b135.jpeg",
+
+    "https://img.buzzfeed.com/tasty-app-user-assets-prod-us-east-1/recipes/a3356aaddec3466c9eae2a3f2abd109b.jpeg",
+
+    "https://img.buzzfeed.com/tasty-app-user-assets-prod-us-east-1/recipes/c10bb88f1f664b3890c38c506cadd7a2.jpeg",
+
+    "https://img.buzzfeed.com/tasty-app-user-assets-prod-us-east-1/recipes/32ef88a048064206a7d9299fed001f50.jpeg",
+
+    "https://img.buzzfeed.com/tasty-app-user-assets-prod-us-east-1/recipes/7c4bbc36486441a5a9b4ee0a6b89066a.jpeg",
+
+    )
 
 
 @JsonClass(generateAdapter = true)
@@ -49,6 +62,9 @@ data class GistFile(var content: String?)
 
 @Composable
 fun CreateScreen() {
+    var showRecipes = remember {
+        mutableStateOf(false)
+    }
     Column(
         modifier = Modifier
             .background(color = Color.White)
@@ -70,8 +86,32 @@ fun CreateScreen() {
             )
         }
         Ingredients()
+        Button(onClick = {
+            showRecipes.value = true
+        }) {
+            Text("Confirm")
+        }
+        if(showRecipes.value) {
+            showList()
+        }
     }
+
 }
+
+@Composable
+fun showList() {
+    LazyColumn {
+        items(linkList) { item: String ->
+            AsyncImage(model = item, contentDescription = null, modifier = Modifier.fillMaxWidth())
+        }
+                }
+}
+
+
+
+
+
+
 @Composable
 private fun Ingredients(count: List<String> = List(3) { "$it" }) {
     LazyColumn(modifier = Modifier.padding(vertical = 4.dp)) {
