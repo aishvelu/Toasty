@@ -1,4 +1,13 @@
 package com.example.mealapp.screens
+import android.content.Context
+import android.graphics.Bitmap
+import android.graphics.drawable.Drawable
+import android.media.Image
+import android.net.Network
+import android.os.Build
+import android.util.Log
+import android.widget.Toast
+import androidx.annotation.RequiresApi
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -9,7 +18,6 @@ import androidx.compose.material.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.KeyboardArrowDown
 import androidx.compose.material.icons.filled.KeyboardArrowUp
-import androidx.compose.material.icons.filled.Menu
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -17,6 +25,7 @@ import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.layout.onGloballyPositioned
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
@@ -25,43 +34,91 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.unit.toSize
 import coil.compose.AsyncImage
+import coil.compose.rememberAsyncImagePainter
 import com.example.mealapp.R
-import com.squareup.moshi.JsonClass
-import com.squareup.moshi.Moshi
+import com.squareup.moshi.*
+//import com.squareup.moshi.kotlin.reflect.KotlinJsonAdapterFactory
 import com.squareup.picasso.Picasso
-import okhttp3.OkHttpClient
-import okhttp3.Request
+import com.squareup.picasso.Target
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.cancel
+import kotlinx.coroutines.channels.awaitClose
+import kotlinx.coroutines.channels.onFailure
+import kotlinx.coroutines.channels.trySendBlocking
+import kotlinx.coroutines.flow.callbackFlow
+import kotlinx.coroutines.flow.catch
+import kotlinx.coroutines.launch
+import okhttp3.*
 import okio.IOException
+import java.lang.Exception
+import java.util.concurrent.CompletableFuture
+import kotlin.concurrent.thread
+import retrofit2.Call
+import retrofit2.Callback
+import retrofit2.Response
+import retrofit2.Retrofit
+import retrofit2.converter.gson.GsonConverterFactory
 
-private val client = OkHttpClient()
-private val moshi = Moshi.Builder().build()
-private val gistJsonAdapter = moshi.adapter(Gist::class.java)
-private val url = "https://tasty.p.rapidapi.com/recipes/list?from=0&size=10&tags=under_30_minutes&q="
-val linkList = listOf<String>("https://img.buzzfeed.com/tasty-app-user-assets-prod-us-east-1/recipes/4ea6c7ca275a4112b063af2cd4ffe13d.jpeg",
+private val client = OkHttpClient().newBuilder().apply {
+    addInterceptor(MyInterceptor())
+}.build()
 
-    "https://img.buzzfeed.com/tasty-app-user-assets-prod-us-east-1/recipes/79237d0c898649c5bb373483f792b135.jpeg",
+val urlList = mutableListOf<String>()
 
-    "https://img.buzzfeed.com/tasty-app-user-assets-prod-us-east-1/recipes/a3356aaddec3466c9eae2a3f2abd109b.jpeg",
+private val url = "https://tasty.p.rapidapi.com/"
 
-    "https://img.buzzfeed.com/tasty-app-user-assets-prod-us-east-1/recipes/c10bb88f1f664b3890c38c506cadd7a2.jpeg",
+private fun getMyData(ing: MutableList<MutableState<String>>){
+    val retrofitBuilder = Retrofit.Builder()
+        .addConverterFactory(GsonConverterFactory.create())
+        .baseUrl(url)
+        .client(client)
+        .build()
+        .create(ApiInterface::class.java)
+    var tags = ""
+    if (ing.isNotEmpty() && ing.size == 1){
+        tags+= ing.elementAt(0)
+    }
+    else if (ing.isNotEmpty() && ing.size > 1){
+        for(ingredient in ing){
+            tags += ingredient
+            if (ingredient == ing.elementAt(ing.size-1)){
 
-    "https://img.buzzfeed.com/tasty-app-user-assets-prod-us-east-1/recipes/32ef88a048064206a7d9299fed001f50.jpeg",
+            }
+            else{
+                tags += "%20"
+            }
+        }
+    }
+    else{
 
-    "https://img.buzzfeed.com/tasty-app-user-assets-prod-us-east-1/recipes/7c4bbc36486441a5a9b4ee0a6b89066a.jpeg",
+    }
+    val retrofitData = retrofitBuilder.getData(tags)
+    retrofitData.enqueue(object : Callback<MyRecipeList?> {
+        override fun onResponse(
+            call: Call<MyRecipeList?>,
+            response: Response<MyRecipeList?>
+        ) {
+            val responseBody = response.body()!!
 
-    )
+            for(recipeData in responseBody.results){
+                    urlList.add(recipeData.video_url)
+                    Log.i("log", recipeData.video_url)
+            }
+            Log.i("log", responseBody.count.toString())
+            Log.i("log", responseBody.results.toString())
+        }
 
-
-@JsonClass(generateAdapter = true)
-data class Gist(var files: Map<String, GistFile>?)
-
-@JsonClass(generateAdapter = true)
-data class GistFile(var content: String?)
-
-
+        override fun onFailure(call: Call<MyRecipeList?>, t: Throwable) {
+            Log.d("failed t", t.toString())
+            Log.d("failed call", call.toString())
+        }
+    })
+}
 
 @Composable
 fun CreateScreen() {
+    val ing = Ingredients()
     var showRecipes = remember {
         mutableStateOf(false)
     }
@@ -87,39 +144,40 @@ fun CreateScreen() {
         }
         Ingredients()
         Button(onClick = {
+            getMyData(ing)
             showRecipes.value = true
         }) {
-            Text("Confirm")
+            Text("Confirm", color = Color.Black)
         }
         if(showRecipes.value) {
-            showList()
+
+        }
+        else{
+
         }
     }
 
 }
-
 @Composable
 fun showList() {
     LazyColumn {
-        items(linkList) { item: String ->
-            AsyncImage(model = item, contentDescription = null, modifier = Modifier.fillMaxWidth())
-        }
-                }
-}
-
-
-
-
-
-
-@Composable
-private fun Ingredients(count: List<String> = List(3) { "$it" }) {
-    LazyColumn(modifier = Modifier.padding(vertical = 4.dp)) {
-        items(items = count) {
-            TopAppBarDropdownMenu()
+        items(urlList) { item: String ->
+            Text(item, color = Color.Black)
         }
     }
 }
+
+@Composable
+private fun Ingredients(count: List<String> = List(3) { "$it" }): MutableList<MutableState<String>> {
+    val ing = mutableListOf<MutableState<String>>()
+    LazyColumn(modifier = Modifier.padding(vertical = 4.dp)) {
+        items(items = count) {
+            ing.add(TopAppBarDropdownMenu())
+        }
+    }
+    return ing
+}
+
 
 @Composable
 fun NestedMenu(onValueChange: () -> Unit, expandedNested:MutableState<Boolean>,
@@ -151,7 +209,7 @@ fun NestedMenu(onValueChange: () -> Unit, expandedNested:MutableState<Boolean>,
     }
 }
 @Composable
-fun TopAppBarDropdownMenu() {
+fun TopAppBarDropdownMenu(): MutableState<String> {
     var expandedMain = remember { mutableStateOf(false) }
     var expandedNested = remember { mutableStateOf(false) }
     var expandedNestedLabel = remember { mutableStateOf("") }
@@ -201,11 +259,12 @@ fun TopAppBarDropdownMenu() {
                 .width(with(LocalDensity.current){textfieldSize.value.width.toDp()})
         ) {
             suggestions.forEach { label ->
-                DropdownMenuItem(onClick = {
-                    expandedMain.value = false
-                    expandedNested.value = true
-                    expandedNestedLabel.value = label
-                },
+                DropdownMenuItem(
+                    onClick = {
+                        expandedMain.value = false
+                        expandedNested.value = true
+                        expandedNestedLabel.value = label
+                    },
                 ){
                     Row(horizontalArrangement = Arrangement.Start) {
                         Text(text = label)
@@ -270,38 +329,5 @@ fun TopAppBarDropdownMenu() {
 
         }
     }
-}
-
-@Composable
-fun RecipeImage(ingredient_1: String, ingredient_2: String = "", ingredient_3: String = "") {
-    var urlmod = url + ingredient_1
-    if(!ingredient_2.equals("")){
-        urlmod += ingredient_2
-    }
-    if(!ingredient_3.equals("")){
-        urlmod += ingredient_3
-    }
-
-    val request = Request.Builder()
-        .url(urlmod)
-        .get()
-        .addHeader("X-RapidAPI-Key", "1fce4d8ce8mshb43ee73e23131ecp128481jsn7574c01064bf")
-        .addHeader("X-RapidAPI-Host", "tasty.p.rapidapi.com")
-        .build()
-    client.newCall(request).execute().use { response ->
-        if (!response.isSuccessful) throw IOException("Unexpected code $response")
-
-        val gist = gistJsonAdapter.fromJson(response.body!!.source())
-
-        for ((key, value) in gist!!.files!!) {
-            println(key)
-            println(value.content)
-        }
-    }
-}
-
-@Composable
-@Preview
-fun CreateScreenPreview() {
-    CreateScreen()
+    return selectedText
 }

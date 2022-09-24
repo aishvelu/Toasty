@@ -54,7 +54,7 @@ fun SavedScreen() {
                 text = "Saved Recipes",
                 style = MaterialTheme.typography.h2,
                 modifier = Modifier
-                    .padding(0.dp)
+                    .padding(16.dp)
             )
         }
         showSaved()
